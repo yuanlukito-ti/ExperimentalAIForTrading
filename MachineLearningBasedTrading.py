@@ -6,24 +6,6 @@ import matplotlib.pyplot as plt
 
 #scikit learn
 
-# functions
-def update_dataframe_columns():
-    """Update the dataframe columns based on user selection."""
-    selected_columns = st.session_state.selected_columns
-    if selected_columns:
-        st.session_state.df = st.session_state.df[selected_columns]
-    else:
-        st.session_state.df = pd.DataFrame()
-
-# functions
-def update_dataframe_features_columns():
-    """Update the dataframe columns based on user selection."""
-    selected_features_columns = st.session_state.selected_features_columns
-    if selected_features_columns:
-        st.session_state.df_selected_features = st.session_state.df_selected_features[selected_features_columns]
-    else:
-        st.session_state.df_selected_features = pd.DataFrame()
-
 # dialog for revision history
 @st.dialog("Revision History")
 def revision_history():
@@ -34,6 +16,7 @@ def revision_history():
     st.write("- Basic exploratory data analysis (EDA)")
     st.write("- Data labelling (Fixed time horizon, Triple barriers)")
     st.write("- Features engineering (SMA, RSI, MACD, OBV, ATR)")
+    st.write("- Machine Learning Algorithms selection (KNN, Decision Tree, Random Forest, XGBoost, LightGBM) and Parameters")
     
 
 # Dataframes initialization
