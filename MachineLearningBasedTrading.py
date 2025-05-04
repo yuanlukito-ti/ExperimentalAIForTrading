@@ -227,6 +227,8 @@ if not st.session_state.df_label.empty:
     st.write("This section allows you to create new features from the stock data.")
     st.session_state.df_features = st.session_state.df_label.copy()
     
+    st.write("### Trend Following Indicators")
+
     # Simple Moving Average
     sma_option = st.checkbox("Simple Moving Average (SMA)", value=False)
     if sma_option:
@@ -242,37 +244,7 @@ if not st.session_state.df_label.empty:
         ax.legend()
         st.pyplot(fig)
 
-    # RSI
-    rsi_option = st.checkbox("Relative Strength Index (RSI)", value=False)
-    if rsi_option:
-        window = st.number_input("RSI Window Size", min_value=1, value=14, step=1)
-        delta = st.session_state.df_features['Close'].diff()
-        gain = (delta.where(delta > 0, 0)).rolling(window=window).mean()
-        loss = (-delta.where(delta < 0, 0)).rolling(window=window).mean()
-        rs = gain / loss
-        st.session_state.df_features['RSI'] = 100 - (100 / (1 + rs))
-        st.write("RSI added to the dataframe.")
-        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 8), sharex=True)
-
-        # Panel 1: Close Price
-        ax1.plot(st.session_state.df_features['Close'], label='Close Price', color='blue')
-        ax1.set_title(f'{ticker} Closing Price')
-        ax1.set_ylabel('Price')
-        ax1.legend()
-
-        # Panel 2: RSI
-        ax2.plot(st.session_state.df_features['RSI'], label='RSI', color='blue')
-        ax2.axhline(70, color='red', linestyle='--', label='Overbought (70)')
-        ax2.axhline(30, color='green', linestyle='--', label='Oversold (30)')
-        ax2.set_title('Relative Strength Index (RSI)')
-        ax2.set_xlabel('Date')
-        ax2.set_ylabel('RSI')
-        ax2.legend()
-
-        plt.tight_layout()
-        st.pyplot(fig)
-
-    macd_option = st.checkbox("MACD", value=False)
+    macd_option = st.checkbox("Moving Average Convergence Divergence (MACD)", value=False)
     if macd_option:
         short_window = st.number_input("Short EMA Window Size", min_value=1, value=12, step=1)
         long_window = st.number_input("Long EMA Window Size", min_value=1, value=26, step=1)
@@ -312,29 +284,98 @@ if not st.session_state.df_label.empty:
         plt.tight_layout()
         st.pyplot(fig)
 
-    obv_option = st.checkbox("On-Balance Volume (OBV)", value=False)
-    if obv_option:
-        obv = (np.sign(st.session_state.df['Close'].diff()) * st.session_state.df['Volume']).fillna(0).cumsum()
-        st.session_state.df_features['OBV'] = obv
-        st.write("On-Balance Volume (OBV) added to the dataframe.")
-        fig = plt.figure(figsize=(10, 10))
+    st.write("### Momentum Indicators")
+
+    # RSI
+    rsi_option = st.checkbox("Relative Strength Index (RSI)", value=False)
+    if rsi_option:
+        window = st.number_input("RSI Window Size", min_value=1, value=14, step=1)
+        delta = st.session_state.df_features['Close'].diff()
+        gain = (delta.where(delta > 0, 0)).rolling(window=window).mean()
+        loss = (-delta.where(delta < 0, 0)).rolling(window=window).mean()
+        rs = gain / loss
+        st.session_state.df_features['RSI'] = 100 - (100 / (1 + rs))
+        st.write("RSI added to the dataframe.")
+        fig = plt.figure(figsize=(10, 8))
 
         # Panel 1: Close Price (2/3 of the figure height)
         ax1 = plt.subplot2grid((3, 1), (0, 0), rowspan=2)
-        ax1.plot(st.session_state.df['Close'], label='Close Price', color='blue')
+        ax1.plot(st.session_state.df_features['Close'], label='Close Price', color='blue')
+        ax1.set_title(f'{ticker} Closing Price')
+        ax1.set_ylabel('Price')
+        ax1.legend()
+
+        # Panel 2: RSI (1/3 of the figure height)
+        ax2 = plt.subplot2grid((3, 1), (2, 0), rowspan=1)
+        ax2.plot(st.session_state.df_features['RSI'], label='RSI', color='black')
+        ax2.axhline(70, color='red', linestyle='--', label='Overbought (70)')
+        ax2.axhline(30, color='green', linestyle='--', label='Oversold (30)')
+        ax2.set_title('Relative Strength Index (RSI)')
+        ax2.set_xlabel('Date')
+        ax2.set_ylabel('RSI')
+        ax2.legend()
+
+        plt.tight_layout()
+        st.pyplot(fig)
+    
+    stochastic_option = st.checkbox("Stochastic Oscillator", value=False)
+    if stochastic_option:
+        window = st.number_input("Stochastic Window Size", min_value=1, value=14, step=1)
+        k_window = st.number_input("K Window Size", min_value=1, value=3, step=1)
+        d_window = st.number_input("D Window Size", min_value=1, value=3, step=1)
+
+        low_min = st.session_state.df_features['Low'].rolling(window=window).min()
+        high_max = st.session_state.df_features['High'].rolling(window=window).max()
+        stoch_k = 100 * ((st.session_state.df_features['Close'] - low_min) / (high_max - low_min))
+        stoch_d = stoch_k.rolling(window=d_window).mean()
+
+        st.session_state.df_features['Stochastic K'] = stoch_k
+        st.session_state.df_features['Stochastic D'] = stoch_d
+        st.write("Stochastic Oscillator added to the dataframe.")
+        fig = plt.figure(figsize=(10, 8))
+
+        # Top panel: Close Price (2/3 of the figure height)
+        ax1 = plt.subplot2grid((3, 1), (0, 0), rowspan=2)
+        ax1.plot(st.session_state.df_features['Close'], label='Close Price', color='blue')
         ax1.set_title('Close Price')
         ax1.set_ylabel('Price')
         ax1.legend()
 
-        # Panel 2: OBV (1/3 of the figure height)
+        # Bottom panel: Stochastic Oscillator (1/3 of the figure height)
         ax2 = plt.subplot2grid((3, 1), (2, 0), rowspan=1)
-        ax2.plot(st.session_state.df_features['OBV'], label='OBV', color='red')
-        ax2.set_title('On-Balance Volume (OBV)')
+        ax2.plot(st.session_state.df_features['Stochastic K'], label='Stochastic K', color='black')
+        ax2.plot(st.session_state.df_features['Stochastic D'], label='Stochastic D', color='red')
+        ax2.axhline(80, color='purple', linestyle='--', label='Overbought (80)')
+        ax2.axhline(20, color='green', linestyle='--', label='Oversold (20)')
+        ax2.set_title('Stochastic Oscillator')
         ax2.set_xlabel('Date')
-        ax2.set_ylabel('OBV')
+        ax2.set_ylabel('Value')
         ax2.legend()
 
         plt.tight_layout()
+        st.pyplot(fig)
+
+    st.write("### Volatility Indicators")
+
+    bollinger_bands_option = st.checkbox("Bollinger Bands", value=False)
+    if bollinger_bands_option:
+        window = st.number_input("Bollinger Bands Window Size", min_value=1, value=20, step=1)
+        num_std = st.number_input("Number of Standard Deviations", min_value=0.0, value=2.0, step=0.1)
+        rolling_mean = st.session_state.df['Close'].rolling(window=window).mean()
+        rolling_std = st.session_state.df['Close'].rolling(window=window).std()
+        upper_band = rolling_mean + (rolling_std * num_std)
+        lower_band = rolling_mean - (rolling_std * num_std)
+        st.session_state.df_features['Upper Band'] = upper_band
+        st.session_state.df_features['Lower Band'] = lower_band
+        st.write("Bollinger Bands added to the dataframe.")
+        fig, ax = plt.subplots(figsize=(10, 5))
+        ax.plot(st.session_state.df['Close'], label='Close Price', color='blue')
+        ax.plot(upper_band, label='Upper Band', color='red')
+        ax.plot(lower_band, label='Lower Band', color='green')
+        ax.set_title('Bollinger Bands')
+        ax.set_xlabel('Date')
+        ax.set_ylabel('Price')
+        ax.legend()
         st.pyplot(fig)
 
     atr_option = st.checkbox("Average True Range (ATR)", value=False)
@@ -366,27 +407,32 @@ if not st.session_state.df_label.empty:
         plt.tight_layout()
         st.pyplot(fig)
 
-    bollinger_bands_option = st.checkbox("Bollinger Bands", value=False)
-    if bollinger_bands_option:
-        window = st.number_input("Bollinger Bands Window Size", min_value=1, value=20, step=1)
-        num_std = st.number_input("Number of Standard Deviations", min_value=0.0, value=2.0, step=0.1)
-        rolling_mean = st.session_state.df['Close'].rolling(window=window).mean()
-        rolling_std = st.session_state.df['Close'].rolling(window=window).std()
-        upper_band = rolling_mean + (rolling_std * num_std)
-        lower_band = rolling_mean - (rolling_std * num_std)
-        st.session_state.df_features['Upper Band'] = upper_band
-        st.session_state.df_features['Lower Band'] = lower_band
-        st.write("Bollinger Bands added to the dataframe.")
-        fig, ax = plt.subplots(figsize=(10, 5))
-        ax.plot(st.session_state.df['Close'], label='Close Price', color='blue')
-        ax.plot(upper_band, label='Upper Band', color='red')
-        ax.plot(lower_band, label='Lower Band', color='green')
-        ax.set_title('Bollinger Bands')
-        ax.set_xlabel('Date')
-        ax.set_ylabel('Price')
-        ax.legend()
-        st.pyplot(fig)
+    st.write("### Volume Indicators")
 
+    obv_option = st.checkbox("On-Balance Volume (OBV)", value=False)
+    if obv_option:
+        obv = (np.sign(st.session_state.df['Close'].diff()) * st.session_state.df['Volume']).fillna(0).cumsum()
+        st.session_state.df_features['OBV'] = obv
+        st.write("On-Balance Volume (OBV) added to the dataframe.")
+        fig = plt.figure(figsize=(10, 10))
+
+        # Panel 1: Close Price (2/3 of the figure height)
+        ax1 = plt.subplot2grid((3, 1), (0, 0), rowspan=2)
+        ax1.plot(st.session_state.df['Close'], label='Close Price', color='blue')
+        ax1.set_title('Close Price')
+        ax1.set_ylabel('Price')
+        ax1.legend()
+
+        # Panel 2: OBV (1/3 of the figure height)
+        ax2 = plt.subplot2grid((3, 1), (2, 0), rowspan=1)
+        ax2.plot(st.session_state.df_features['OBV'], label='OBV', color='red')
+        ax2.set_title('On-Balance Volume (OBV)')
+        ax2.set_xlabel('Date')
+        ax2.set_ylabel('OBV')
+        ax2.legend()
+
+        plt.tight_layout()
+        st.pyplot(fig)
     st.divider()
 
 ################################################################################
