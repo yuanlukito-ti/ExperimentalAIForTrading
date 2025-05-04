@@ -9,8 +9,10 @@ from sklearn.metrics import classification_report, confusion_matrix, accuracy_sc
 from sklearn.preprocessing import StandardScaler
 from lightgbm import LGBMClassifier
 from xgboost import XGBClassifier
-
-#scikit learn
+from sklearn.svm import SVC
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.neural_network import MLPClassifier
 
 # dialog for revision history
 @st.dialog("Revision History")
@@ -496,7 +498,7 @@ if not st.session_state.df_selected_features.empty:
 
     st.subheader("Select Algorithm and Parameters")
     # Select algorithm
-    algorithm = st.selectbox("Select Algorithm", ["K-Nearest Neighbors", "Decision Tree", "Random Forest", "XGBoost", "LightGBM"], index=0, accept_new_options=False)
+    algorithm = st.selectbox("Select Algorithm", ["K-Nearest Neighbors", "Decision Tree", "Random Forest", "XGBoost", "LightGBM", "Support Vector Machine", "Multi-Layer Perceptron"], index=0, accept_new_options=False)
     
 
     if algorithm == "K-Nearest Neighbors":
@@ -549,6 +551,22 @@ if not st.session_state.df_selected_features.empty:
             max_depth = st.number_input("Max Depth", min_value=-1, value=-1)  # -1 means no limit
         with col3:
             learning_rate = st.number_input("Learning Rate", min_value=0.01, value=0.3, step=0.01)
+
+    if algorithm == "Support Vector Machine":
+        st.write("Support Vector Machine selected.")
+        col1, col2 = st.columns(2, vertical_alignment="bottom")
+        with col1:
+            kernel = st.selectbox("Kernel", ["linear", "poly", "rbf", "sigmoid"], index=0, accept_new_options=False)
+        with col2:
+            C = st.number_input("Regularization Parameter (C)", min_value=0.01, value=1.0, step=0.01)
+
+    if algorithm == "Multi-Layer Perceptron":
+        st.write("Multi-Layer Perceptron selected.")
+        col1, col2 = st.columns(2, vertical_alignment="bottom")
+        with col1:
+            hidden_layer_sizes = st.number_input("Hidden Layer Sizes", min_value=1, value=100, step=1)
+        with col2:
+            activation = st.selectbox("Activation Function", ["identity", "logistic", "tanh", "relu"], index=0, accept_new_options=False)
 
     st.subheader("Train-Test Split")
     # train-test split
@@ -610,7 +628,6 @@ if not st.session_state.df_selected_features.empty:
                 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state)
 
                 # Train and predict using Decision Tree
-                from sklearn.tree import DecisionTreeClassifier
                 dt = DecisionTreeClassifier(max_depth=max_depth, min_samples_split=min_samples_split, min_samples_leaf=min_samples_leaf, random_state=random_state)
                 dt.fit(X_train, y_train)
                 y_pred = dt.predict(X_test)
@@ -647,7 +664,6 @@ if not st.session_state.df_selected_features.empty:
                 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state)
 
                 # Train and predict using Random Forest
-                from sklearn.ensemble import RandomForestClassifier
                 rf = RandomForestClassifier(n_estimators=n_estimators, max_depth=max_depth, min_samples_split=min_samples_split, min_samples_leaf=min_samples_leaf, random_state=random_state)
                 rf.fit(X_train, y_train)
                 y_pred = rf.predict(X_test)
@@ -726,6 +742,89 @@ if not st.session_state.df_selected_features.empty:
                 lgbm = LGBMClassifier(n_estimators=n_estimators, max_depth=max_depth, learning_rate=learning_rate, random_state=random_state)
                 lgbm.fit(X_train, y_train)
                 y_pred = lgbm.predict(X_test)
+
+                st.write("### Classification Report")
+                report = classification_report(y_test, y_pred, output_dict=True)
+                report_df = pd.DataFrame(report).transpose()
+                st.dataframe(report_df)
+
+                st.write("### Confusion Matrix")
+                cm = confusion_matrix(y_test, y_pred, labels=["Buy", "Hold", "Sell"])
+                fig, ax = plt.subplots(figsize=(5, 5))
+                cax = ax.matshow(cm, cmap='coolwarm', alpha=0.7)
+                fig.colorbar(cax)
+                for (i, j), z in np.ndenumerate(cm):
+                    ax.text(j, i, f'{z}', ha='center', va='center')
+                ax.set_xticks(range(len(["Buy", "Hold", "Sell"])))
+                ax.set_yticks(range(len(["Buy", "Hold", "Sell"])))
+                ax.set_xticklabels(["Buy", "Hold", "Sell"])
+                ax.set_yticklabels(["Buy", "Hold", "Sell"])
+                plt.xlabel('Predicted')
+                plt.ylabel('True')
+                plt.title('Confusion Matrix')
+                st.pyplot(fig)
+                st.write("### Accuracy Score")
+                st.text(f"Accuracy: {accuracy_score(y_test, y_pred):.2f}")
+                st.divider()
+            
+            elif algorithm == "Support Vector Machine":
+                st.subheader("Support Vector Machine Model")
+                X = st.session_state.df_selected_features.drop(columns=['Label'])
+                y = st.session_state.df_selected_features['Label']
+
+                X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state)
+
+                # Standardize the features
+                scaler = StandardScaler()
+                X_train = scaler.fit_transform(X_train)
+                X_test = scaler.transform(X_test)
+
+                # Train and predict using Support Vector Machine
+                
+                svm = SVC(kernel=kernel, C=C, random_state=random_state)
+                svm.fit(X_train, y_train)
+                y_pred = svm.predict(X_test)
+
+                st.write("### Classification Report")
+                report = classification_report(y_test, y_pred, output_dict=True)
+                report_df = pd.DataFrame(report).transpose()
+                st.dataframe(report_df)
+
+                st.write("### Confusion Matrix")
+                cm = confusion_matrix(y_test, y_pred, labels=["Buy", "Hold", "Sell"])
+                fig, ax = plt.subplots(figsize=(5, 5))
+                cax = ax.matshow(cm, cmap='coolwarm', alpha=0.7)
+                fig.colorbar(cax)
+                for (i, j), z in np.ndenumerate(cm):
+                    ax.text(j, i, f'{z}', ha='center', va='center')
+                ax.set_xticks(range(len(["Buy", "Hold", "Sell"])))
+                ax.set_yticks(range(len(["Buy", "Hold", "Sell"])))
+                ax.set_xticklabels(["Buy", "Hold", "Sell"])
+                ax.set_yticklabels(["Buy", "Hold", "Sell"])
+                plt.xlabel('Predicted')
+                plt.ylabel('True')
+                plt.title('Confusion Matrix')
+                st.pyplot(fig)
+                st.write("### Accuracy Score")
+                st.text(f"Accuracy: {accuracy_score(y_test, y_pred):.2f}")
+                st.divider()
+            
+            elif algorithm == "Multi-Layer Perceptron":
+                st.subheader("Multi-Layer Perceptron Model")
+                X = st.session_state.df_selected_features.drop(columns=['Label'])
+                y = st.session_state.df_selected_features['Label']
+
+                X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state)
+
+                # Standardize the features
+                scaler = StandardScaler()
+                X_train = scaler.fit_transform(X_train)
+                X_test = scaler.transform(X_test)
+
+                # Train and predict using Multi-Layer Perceptron
+                mlp = MLPClassifier(hidden_layer_sizes=(hidden_layer_sizes,), activation=activation, random_state=random_state)
+                mlp.fit(X_train, y_train)
+                y_pred = mlp.predict(X_test)
 
                 st.write("### Classification Report")
                 report = classification_report(y_test, y_pred, output_dict=True)
