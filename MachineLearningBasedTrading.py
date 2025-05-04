@@ -71,7 +71,7 @@ with col1:
 with col2:
     start_date = st.date_input("Start date:", pd.to_datetime("2020-01-01"))
 with col3:
-    end_date = st.date_input("End date:", pd.to_datetime("2023-01-01")) 
+    end_date = st.date_input("End date:", pd.to_datetime("2023-12-31"))
 with col4:
     if st.button("Fetch Data"):
         with st.spinner("Fetching data..."):
@@ -485,7 +485,7 @@ if not st.session_state.df_selected_features.empty:
     with col2:
         random_state = st.number_input("Random State", min_value=0, value=42, step=1)
 
-    if st.button(f"Train Model with {algorithm} algorithm"):
-        with st.spinner("Training model..."):
+    if st.button(f"Train and test Model with {algorithm} algorithm"):
+        with st.spinner("Training and testing model..."):
             # Placeholder for model training code
             pass
