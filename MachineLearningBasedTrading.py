@@ -623,7 +623,7 @@ if not st.session_state.df_selected_features.empty:
                 y_pred = xgb.predict(X_test)
 
                 st.write("### Classification Report")
-                report = classification_report(y_test, y_pred, output_dict=True)
+                report = classification_report(y_test, y_pred, labels=[1, 0, 2], target_names=["Buy", "Hold", "Sell"], output_dict=True)
                 report_df = pd.DataFrame(report).transpose()
                 st.dataframe(report_df)
 
