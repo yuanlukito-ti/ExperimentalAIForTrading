@@ -23,7 +23,8 @@ def revision_history():
     st.write("- Data labelling (Fixed time horizon, Triple barriers)")
     st.write("- Features engineering (SMA, RSI, MACD, OBV, ATR)")
     st.write("- Machine Learning Algorithms selection (KNN, Decision Tree, Random Forest, XGBoost, LightGBM) and Parameters")
-    
+    st.write("- Model training and testing")
+    st.write("- Classification report and confusion matrix")
 
 # Dataframes initialization
 # Original dataframe from Yahoo Finance
@@ -157,7 +158,7 @@ if not st.session_state.df.empty:
     
     st.session_state.df_label = st.session_state.df.copy()
     
-    labelling_option = st.selectbox("Select labelling method", ["Fixed time horizon", "Triple Barriers"])
+    labelling_option = st.selectbox("Select labelling method", ["Fixed time horizon", "Triple barriers"])
     if labelling_option == "Fixed time horizon":
         st.write("This method labels the data based on a fixed time horizon. It compares current Close with current+horizon Close")
         horizon = st.number_input("Horizon (in days)", min_value=1, value=5, step=1)
@@ -177,15 +178,15 @@ if not st.session_state.df.empty:
 
         # triple barriers logic
         labels = []
-        for i in range(len(st.session_state.df)):
-            price = st.session_state.df.Close.iloc[i]
+        for i in range(len(st.session_state.df_label)):
+            price = st.session_state.df_label.Close.iloc[i]
             upper = price * (1 + barrier1)
             lower = price * (1 + barrier2)
             for t in range(1, time_horizon+1):
-                if i + t >= len(st.session_state.df):
+                if i + t >= len(st.session_state.df_label):
                     labels.append('Hold')
                     break
-                future_price = st.session_state.df.Close.iloc[i + t]
+                future_price = st.session_state.df_label.Close.iloc[i + t]
                 if future_price >= upper:
                     labels.append('Buy')
                     break
@@ -195,8 +196,7 @@ if not st.session_state.df.empty:
             else:
                 labels.append('Hold')
         st.session_state.df_label['Label'] = labels
-
-    if labelling_option != "":
+        st.write("Labels added to the dataframe.")
         st.session_state.df_label
     
     if not st.session_state.df_label.empty:
@@ -364,6 +364,27 @@ if not st.session_state.df_label.empty:
         ax.set_ylabel('ATR')
         ax.legend()
         plt.tight_layout()
+        st.pyplot(fig)
+
+    bollinger_bands_option = st.checkbox("Bollinger Bands", value=False)
+    if bollinger_bands_option:
+        window = st.number_input("Bollinger Bands Window Size", min_value=1, value=20, step=1)
+        num_std = st.number_input("Number of Standard Deviations", min_value=0.0, value=2.0, step=0.1)
+        rolling_mean = st.session_state.df['Close'].rolling(window=window).mean()
+        rolling_std = st.session_state.df['Close'].rolling(window=window).std()
+        upper_band = rolling_mean + (rolling_std * num_std)
+        lower_band = rolling_mean - (rolling_std * num_std)
+        st.session_state.df_features['Upper Band'] = upper_band
+        st.session_state.df_features['Lower Band'] = lower_band
+        st.write("Bollinger Bands added to the dataframe.")
+        fig, ax = plt.subplots(figsize=(10, 5))
+        ax.plot(st.session_state.df['Close'], label='Close Price', color='blue')
+        ax.plot(upper_band, label='Upper Band', color='red')
+        ax.plot(lower_band, label='Lower Band', color='green')
+        ax.set_title('Bollinger Bands')
+        ax.set_xlabel('Date')
+        ax.set_ylabel('Price')
+        ax.legend()
         st.pyplot(fig)
 
     st.divider()
