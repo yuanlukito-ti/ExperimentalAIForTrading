@@ -28,7 +28,7 @@ def revision_history():
     st.write("- Basic exploratory data analysis (EDA)")
     st.write("- Data labelling (Fixed time horizon, Triple barriers)")
     st.write("- Features engineering (SMA, RSI, MACD, OBV, ATR)")
-    st.write("- Machine Learning Algorithms selection (KNN, Decision Tree, Random Forest, XGBoost, LightGBM) and Parameters")
+    st.write("- Machine Learning Algorithms selection (KNN, Decision Tree, Random Forest, XGBoost, LightGBM, SVM, MLP) and Parameters")
     st.write("- Model training and testing")
     st.write("- Classification report and confusion matrix")
 
@@ -884,7 +884,7 @@ if not st.session_state.df_selected_features.empty:
                 y_pred = mlp.predict(X_test)
 
                 st.write("### Classification Report")
-                
+
                 model_params = {
                     "hidden_layer_sizes": hidden_layer_sizes,
                     "activation": activation
