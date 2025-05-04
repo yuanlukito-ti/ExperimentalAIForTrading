@@ -3,6 +3,12 @@ import pandas as pd
 import numpy as np
 import yfinance as yf
 import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
+from sklearn.preprocessing import StandardScaler
+from lightgbm import LGBMClassifier
+from xgboost import XGBClassifier
 
 #scikit learn
 
@@ -487,5 +493,193 @@ if not st.session_state.df_selected_features.empty:
 
     if st.button(f"Train and test Model with {algorithm} algorithm"):
         with st.spinner("Training and testing model..."):
-            # Placeholder for model training code
-            pass
+            # K-Nearest Neighbors
+            if algorithm == "K-Nearest Neighbors":
+                st.subheader("K-Nearest Neighbors Model")
+                X = st.session_state.df_selected_features.drop(columns=['Label'])
+                y = st.session_state.df_selected_features['Label']
+
+                X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state)
+
+                # Standardize the features
+                scaler = StandardScaler()
+                X_train = scaler.fit_transform(X_train)
+                X_test = scaler.transform(X_test)
+
+                # Train and predict using K-Nearest Neighbors
+                knn = KNeighborsClassifier(n_neighbors=n_neighbors, weights=weights)
+                knn.fit(X_train, y_train)
+                y_pred = knn.predict(X_test)
+
+                st.write("### Classification Report")
+                report = classification_report(y_test, y_pred, output_dict=True)
+                report_df = pd.DataFrame(report).transpose()
+                st.dataframe(report_df)
+
+                st.write("### Confusion Matrix")
+                cm = confusion_matrix(y_test, y_pred, labels=["Buy", "Hold", "Sell"])
+                fig, ax = plt.subplots(figsize=(5, 5))
+                cax = ax.matshow(cm, cmap='coolwarm', alpha=0.7)
+                fig.colorbar(cax)
+                for (i, j), z in np.ndenumerate(cm):
+                    ax.text(j, i, f'{z}', ha='center', va='center')
+                ax.set_xticks(range(len(["Buy", "Hold", "Sell"])))
+                ax.set_yticks(range(len(["Buy", "Hold", "Sell"])))
+                ax.set_xticklabels(["Buy", "Hold", "Sell"])
+                ax.set_yticklabels(["Buy", "Hold", "Sell"])
+                plt.xlabel('Predicted')
+                plt.ylabel('True')
+                plt.title('Confusion Matrix')
+                st.pyplot(fig)
+                st.write("### Accuracy Score")
+                st.text(f"Accuracy: {accuracy_score(y_test, y_pred):.2f}")
+                st.divider()
+
+            elif algorithm == "Decision Tree":
+                st.subheader("Decision Tree Model")
+                X = st.session_state.df_selected_features.drop(columns=['Label'])
+                y = st.session_state.df_selected_features['Label']
+
+                X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state)
+
+                # Train and predict using Decision Tree
+                from sklearn.tree import DecisionTreeClassifier
+                dt = DecisionTreeClassifier(max_depth=max_depth, min_samples_split=min_samples_split, min_samples_leaf=min_samples_leaf, random_state=random_state)
+                dt.fit(X_train, y_train)
+                y_pred = dt.predict(X_test)
+
+                st.write("### Classification Report")
+                report = classification_report(y_test, y_pred, output_dict=True)
+                report_df = pd.DataFrame(report).transpose()
+                st.dataframe(report_df)
+
+                st.write("### Confusion Matrix")
+                cm = confusion_matrix(y_test, y_pred, labels=["Buy", "Hold", "Sell"])
+                fig, ax = plt.subplots(figsize=(5, 5))
+                cax = ax.matshow(cm, cmap='coolwarm', alpha=0.7)
+                fig.colorbar(cax)
+                for (i, j), z in np.ndenumerate(cm):
+                    ax.text(j, i, f'{z}', ha='center', va='center')
+                ax.set_xticks(range(len(["Buy", "Hold", "Sell"])))
+                ax.set_yticks(range(len(["Buy", "Hold", "Sell"])))
+                ax.set_xticklabels(["Buy", "Hold", "Sell"])
+                ax.set_yticklabels(["Buy", "Hold", "Sell"])
+                plt.xlabel('Predicted')
+                plt.ylabel('True')
+                plt.title('Confusion Matrix')
+                st.pyplot(fig)
+                st.write("### Accuracy Score")
+                st.text(f"Accuracy: {accuracy_score(y_test, y_pred):.2f}")
+                st.divider()
+            
+            elif algorithm == "Random Forest":
+                st.subheader("Random Forest Model")
+                X = st.session_state.df_selected_features.drop(columns=['Label'])
+                y = st.session_state.df_selected_features['Label']
+
+                X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state)
+
+                # Train and predict using Random Forest
+                from sklearn.ensemble import RandomForestClassifier
+                rf = RandomForestClassifier(n_estimators=n_estimators, max_depth=max_depth, min_samples_split=min_samples_split, min_samples_leaf=min_samples_leaf, random_state=random_state)
+                rf.fit(X_train, y_train)
+                y_pred = rf.predict(X_test)
+
+                st.write("### Classification Report")
+                report = classification_report(y_test, y_pred, output_dict=True)
+                report_df = pd.DataFrame(report).transpose()
+                st.dataframe(report_df)
+
+                st.write("### Confusion Matrix")
+                cm = confusion_matrix(y_test, y_pred, labels=["Buy", "Hold", "Sell"])
+                fig, ax = plt.subplots(figsize=(5, 5))
+                cax = ax.matshow(cm, cmap='coolwarm', alpha=0.7)
+                fig.colorbar(cax)
+                for (i, j), z in np.ndenumerate(cm):
+                    ax.text(j, i, f'{z}', ha='center', va='center')
+                ax.set_xticks(range(len(["Buy", "Hold", "Sell"])))
+                ax.set_yticks(range(len(["Buy", "Hold", "Sell"])))
+                ax.set_xticklabels(["Buy", "Hold", "Sell"])
+                ax.set_yticklabels(["Buy", "Hold", "Sell"])
+                plt.xlabel('Predicted')
+                plt.ylabel('True')
+                plt.title('Confusion Matrix')
+                st.pyplot(fig)
+                st.write("### Accuracy Score")
+                st.text(f"Accuracy: {accuracy_score(y_test, y_pred):.2f}")
+                st.divider()
+            
+            elif algorithm == "XGBoost":
+                st.subheader("XGBoost Model")
+                X = st.session_state.df_selected_features.drop(columns=['Label'])
+                label_mapping = {"Buy": 1, "Hold": 0, "Sell": 2}
+                y = st.session_state.df_selected_features['Label'].map(label_mapping)
+
+                X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state)
+
+                # Train and predict using XGBoost
+                xgb = XGBClassifier(n_estimators=n_estimators, max_depth=max_depth, learning_rate=learning_rate, random_state=random_state)
+                xgb.fit(X_train, y_train)
+                y_pred = xgb.predict(X_test)
+
+                st.write("### Classification Report")
+                report = classification_report(y_test, y_pred, output_dict=True)
+                report_df = pd.DataFrame(report).transpose()
+                st.dataframe(report_df)
+
+                st.write("### Confusion Matrix")
+                cm = confusion_matrix(y_test.map({v: k for k, v in label_mapping.items()}), 
+                                      pd.Series(y_pred).map({v: k for k, v in label_mapping.items()}), 
+                                      labels=["Buy", "Hold", "Sell"])
+                fig, ax = plt.subplots(figsize=(5, 5))
+                cax = ax.matshow(cm, cmap='coolwarm', alpha=0.7)
+                fig.colorbar(cax)
+                for (i, j), z in np.ndenumerate(cm):
+                    ax.text(j, i, f'{z}', ha='center', va='center')
+                ax.set_xticks(range(len(["Buy", "Hold", "Sell"])))
+                ax.set_yticks(range(len(["Buy", "Hold", "Sell"])))
+                ax.set_xticklabels(["Buy", "Hold", "Sell"])
+                ax.set_yticklabels(["Buy", "Hold", "Sell"])
+                plt.xlabel('Predicted')
+                plt.ylabel('True')
+                plt.title('Confusion Matrix')
+                st.pyplot(fig)
+                st.write("### Accuracy Score")
+                st.text(f"Accuracy: {accuracy_score(y_test, y_pred):.2f}")
+                st.divider()
+            
+            elif algorithm == "LightGBM":
+                st.subheader("LightGBM Model")
+                X = st.session_state.df_selected_features.drop(columns=['Label'])
+                y = st.session_state.df_selected_features['Label']
+
+                X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state)
+
+                # Train and predict using LightGBM
+                lgbm = LGBMClassifier(n_estimators=n_estimators, max_depth=max_depth, learning_rate=learning_rate, random_state=random_state)
+                lgbm.fit(X_train, y_train)
+                y_pred = lgbm.predict(X_test)
+
+                st.write("### Classification Report")
+                report = classification_report(y_test, y_pred, output_dict=True)
+                report_df = pd.DataFrame(report).transpose()
+                st.dataframe(report_df)
+
+                st.write("### Confusion Matrix")
+                cm = confusion_matrix(y_test, y_pred, labels=["Buy", "Hold", "Sell"])
+                fig, ax = plt.subplots(figsize=(5, 5))
+                cax = ax.matshow(cm, cmap='coolwarm', alpha=0.7)
+                fig.colorbar(cax)
+                for (i, j), z in np.ndenumerate(cm):
+                    ax.text(j, i, f'{z}', ha='center', va='center')
+                ax.set_xticks(range(len(["Buy", "Hold", "Sell"])))
+                ax.set_yticks(range(len(["Buy", "Hold", "Sell"])))
+                ax.set_xticklabels(["Buy", "Hold", "Sell"])
+                ax.set_yticklabels(["Buy", "Hold", "Sell"])
+                plt.xlabel('Predicted')
+                plt.ylabel('True')
+                plt.title('Confusion Matrix')
+                st.pyplot(fig)
+                st.write("### Accuracy Score")
+                st.text(f"Accuracy: {accuracy_score(y_test, y_pred):.2f}")
+                st.divider()
