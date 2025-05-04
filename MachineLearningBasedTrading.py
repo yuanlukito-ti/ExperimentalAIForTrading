@@ -14,6 +14,10 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.neural_network import MLPClassifier
 
+# counter for the number of yfinance API calls
+if 'counter' not in st.session_state:
+    st.session_state.counter = 0
+
 # dialog for revision history
 @st.dialog("Revision History")
 def revision_history():
@@ -85,6 +89,10 @@ with col4:
     if st.button("Fetch Data"):
         with st.spinner("Fetching data..."):
             st.session_state.df = yf.download(ticker, start=start_date, end=end_date, multi_level_index=False, auto_adjust=False)
+            st.session_state.counter += 1
+
+if st.session_state.df.empty and st.session_state.counter > 0:
+    st.error("No data available. Please check the ticker symbol and date range.")       
             
 
 if not st.session_state.df.empty:
@@ -99,8 +107,6 @@ if not st.session_state.df.empty:
     plt.ylabel('Price')
     plt.legend()
     st.pyplot(plt)
-else:
-    st.write("No data available for the selected ticker and date range. Please check the ticker symbol and date range.")
 
 st.divider()
 
@@ -576,6 +582,7 @@ if not st.session_state.df_selected_features.empty:
     with col2:
         random_state = st.number_input("Random State", min_value=0, value=42, step=1)
 
+    st.subheader("Model Training and Testing")
     if st.button(f"Train and test Model with {algorithm} algorithm"):
         with st.spinner("Training and testing model..."):
             # K-Nearest Neighbors
@@ -597,6 +604,14 @@ if not st.session_state.df_selected_features.empty:
                 y_pred = knn.predict(X_test)
 
                 st.write("### Classification Report")
+                
+                model_params = {
+                    "n_neighbors": n_neighbors,
+                    "weights": weights
+                }
+                st.write("#### K-Nearest Neighbors Model Parameters")
+                st.table(pd.DataFrame(model_params, index=["Value"]))
+
                 report = classification_report(y_test, y_pred, output_dict=True)
                 report_df = pd.DataFrame(report).transpose()
                 st.dataframe(report_df)
@@ -633,6 +648,14 @@ if not st.session_state.df_selected_features.empty:
                 y_pred = dt.predict(X_test)
 
                 st.write("### Classification Report")
+                model_params = {
+                    "max_depth": max_depth,
+                    "min_samples_split": min_samples_split,
+                    "min_samples_leaf": min_samples_leaf
+                }
+                st.write("#### Decision Tree Model Parameters")
+                st.table(pd.DataFrame(model_params, index=["Value"]))
+
                 report = classification_report(y_test, y_pred, output_dict=True)
                 report_df = pd.DataFrame(report).transpose()
                 st.dataframe(report_df)
@@ -669,6 +692,16 @@ if not st.session_state.df_selected_features.empty:
                 y_pred = rf.predict(X_test)
 
                 st.write("### Classification Report")
+
+                model_params = {
+                    "n_estimators": n_estimators,
+                    "max_depth": max_depth,
+                    "min_samples_split": min_samples_split,
+                    "min_samples_leaf": min_samples_leaf
+                }
+                st.write("#### Random Forest Model Parameters")
+                st.table(pd.DataFrame(model_params, index=["Value"]))
+
                 report = classification_report(y_test, y_pred, output_dict=True)
                 report_df = pd.DataFrame(report).transpose()
                 st.dataframe(report_df)
@@ -706,6 +739,15 @@ if not st.session_state.df_selected_features.empty:
                 y_pred = xgb.predict(X_test)
 
                 st.write("### Classification Report")
+
+                model_params = {
+                    "n_estimators": n_estimators,
+                    "max_depth": max_depth,
+                    "learning_rate": learning_rate
+                }
+                st.write("#### XGBoost Model Parameters")
+                st.table(pd.DataFrame(model_params, index=["Value"]))
+
                 report = classification_report(y_test, y_pred, labels=[1, 0, 2], target_names=["Buy", "Hold", "Sell"], output_dict=True)
                 report_df = pd.DataFrame(report).transpose()
                 st.dataframe(report_df)
@@ -744,6 +786,14 @@ if not st.session_state.df_selected_features.empty:
                 y_pred = lgbm.predict(X_test)
 
                 st.write("### Classification Report")
+                model_params = {
+                    "n_estimators": n_estimators,
+                    "max_depth": max_depth,
+                    "learning_rate": learning_rate
+                }
+                st.write("#### LightGBM Model Parameters")
+                st.table(pd.DataFrame(model_params, index=["Value"]))
+
                 report = classification_report(y_test, y_pred, output_dict=True)
                 report_df = pd.DataFrame(report).transpose()
                 st.dataframe(report_df)
@@ -786,6 +836,13 @@ if not st.session_state.df_selected_features.empty:
                 y_pred = svm.predict(X_test)
 
                 st.write("### Classification Report")
+                model_params = {
+                    "kernel": kernel,
+                    "C": C
+                }
+                st.write("#### Support Vector Machine Model Parameters")
+                st.table(pd.DataFrame(model_params, index=["Value"]))
+
                 report = classification_report(y_test, y_pred, output_dict=True)
                 report_df = pd.DataFrame(report).transpose()
                 st.dataframe(report_df)
@@ -827,6 +884,14 @@ if not st.session_state.df_selected_features.empty:
                 y_pred = mlp.predict(X_test)
 
                 st.write("### Classification Report")
+                
+                model_params = {
+                    "hidden_layer_sizes": hidden_layer_sizes,
+                    "activation": activation
+                }
+                st.write("#### Multi-Layer Perceptron Model Parameters")
+                st.table(pd.DataFrame(model_params, index=["Value"]))
+
                 report = classification_report(y_test, y_pred, output_dict=True)
                 report_df = pd.DataFrame(report).transpose()
                 st.dataframe(report_df)
