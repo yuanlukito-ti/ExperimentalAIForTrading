@@ -58,7 +58,7 @@ df_selected_features = pd.DataFrame()
 if 'df_selected_features' not in st.session_state:
     st.session_state.df_selected_features = df_selected_features
 
-st.title("Machine Learning-based Trading Strategy")
+st.title("StockInsights Machine Learning Lab")
 st.write("Created by **Yuan Lukito** (yuanlukito@ti.ukdw.ac.id) and **Nugroho Agus Haryono** (nugroho@staff.ukdw.ac.id)")
 st.image("ukdw.png")
 st.write("**Program Studi Informatika, Fakultas Teknologi Informasi**")
